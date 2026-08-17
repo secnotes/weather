@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天气查询 · 过去30年今日天气</title>
+  <meta name="description" content="查询任意城市实时天气与未来 7 天预报，并展示今天这个日期在过去 30 年的历史天气（最大降水、最高温、最低温、降水天数）。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">⛅</span>
+      <div>
+        <h1 data-i18n="title">天气查询</h1>
+        <p class="subtitle" data-i18n="subtitle">实时天气 · 7 天预报 · 30 年今日历史</p>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input id="search" type="text" autocomplete="off" data-i18n-ph="search-ph" placeholder="搜索城市，如 北京 / Shanghai / Tokyo" />
+      <ul id="suggestions" class="suggestions" hidden></ul>
+    </div>
+    <div class="lang-switch" id="lang-switch">
+      <button type="button" data-lang="zh">中</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 当前天气主卡 -->
+    <section id="current" class="card current-card skeleton" aria-live="polite">
+      <div class="current-main">
+        <div class="current-meta">
+          <h2 id="city-name">—</h2>
+          <p id="current-date" class="muted">—</p>
+          <p id="current-desc" class="desc">—</p>
+          <p class="temp-range"><span id="temp-range">--° ~ --°</span> · <span id="feels-like" class="muted">体感 --°</span></p>
+        </div>
+        <div class="current-temp">
+          <span id="current-emoji" class="big-emoji">—</span>
+          <span id="current-temp">--°</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 详情卡网格 -->
+    <section class="grid detail-grid">
+      <div class="card detail detail-humidity">
+        <div class="detail-head"><div class="detail-icon">💧</div><span class="dlabel" data-i18n="label-humidity">湿度</span></div>
+        <div class="dvalue-row"><span id="d-humidity" class="dvalue">--</span><span id="d-humidity-level" class="dlevel"></span></div>
+        <div class="gauge" id="d-humidity-gauge" aria-label="湿度仪表"></div>
+      </div>
+      <div class="card detail detail-wind">
+        <div class="detail-head"><div class="detail-icon">💨</div><span class="dlabel" data-i18n="label-wind">风力</span></div>
+        <div class="dvalue-row"><span id="d-wind" class="dvalue">--</span><span id="d-wind-sub" class="dlevel"></span></div>
+        <div class="drose" id="d-winddir-rose" aria-label="风向罗盘"></div>
+      </div>
+      <div class="card detail detail-pressure">
+        <div class="detail-head"><div class="detail-icon">📊</div><span class="dlabel" data-i18n="label-pressure">气压</span></div>
+        <div class="dvalue-row"><span id="d-pressure" class="dvalue">--</span><span id="d-pressure-level" class="dlevel"></span></div>
+        <div class="dbar" id="d-pressure-bar"><div class="dbar-marker"></div></div>
+      </div>
+      <div class="card detail detail-uv">
+        <div class="detail-head"><div class="detail-icon">☀️</div><span class="dlabel" data-i18n="label-uv">紫外线</span></div>
+        <div class="dvalue-row"><span id="d-uv" class="dvalue">--</span><span id="d-uv-level" class="dlevel"></span></div>
+        <div class="dbar" id="d-uv-bar"><div class="dbar-marker"></div></div>
+      </div>
+      <div class="card detail detail-aqi">
+        <div class="detail-head"><div class="detail-icon">🌫️</div><span class="dlabel" data-i18n="label-aqi">空气质量（中国）</span></div>
+        <div class="dvalue-row"><span id="d-aqi" class="dvalue">--</span><span id="d-aqi-level" class="dlevel"></span></div>
+        <div class="dbar" id="d-aqi-bar"><div class="dbar-marker"></div></div>
+      </div>
+      <div class="card detail detail-moon">
+        <div class="detail-head"><div class="detail-icon">🌙</div><span class="dlabel" data-i18n="label-moon">月相</span></div>
+        <div class="dvalue-row"><span id="d-moon" class="dvalue">--</span><span id="d-moon-level" class="dlevel"></span></div>
+        <div class="moon-viz" id="d-moon-viz" aria-label="月相图"></div>
+      </div>
+      <div class="card detail detail-sun" id="d-sun-card">
+        <div class="detail-head"><div class="detail-icon">☀️</div><span class="dlabel" data-i18n="label-sun">日出 / 日落</span></div>
+        <div class="sun-row">
+          <div class="sun-end">
+            <span class="sun-emoji">🌅</span>
+            <div class="sun-stack"><span id="d-sunrise" class="sun-time">--:--</span><span class="sun-cap" data-i18n="sun-cap-sunrise">日出</span></div>
+          </div>
+          <div class="sun-mid"><span id="d-daylen" class="sun-daylen">昼长 --</span></div>
+          <div class="sun-end">
+            <div class="sun-stack"><span id="d-sunset" class="sun-time">--:--</span><span class="sun-cap" data-i18n="sun-cap-sunset">日落</span></div>
+            <span class="sun-emoji">🌇</span>
+          </div>
+        </div>
+        <div class="sun-arc" id="d-sun-arc" aria-label="太阳轨迹"></div>
+      </div>
+    </section>
+
+    <!-- 7 天预报 -->
+    <section class="card section-block">
+      <div class="fc-title-row">
+        <h3 class="section-title" data-i18n="fc-title">未来 7 天预报</h3>
+        <div id="fc-mode-btns" class="fc-mode-btns" style="display:none">
+          <button id="fc-cards-btn" data-mode="cards" data-i18n="fc-cards">卡片</button>
+          <button id="fc-list-btn" data-mode="list" data-i18n="fc-list">列表</button>
+        </div>
+      </div>
+      <div id="forecast" class="forecast-row"></div>
+      <div id="forecast-list" class="forecast-list" style="display:none"></div>
+    </section>
+
+    <!-- 30 年今日天气 -->
+    <section class="card section-block extremes-block">
+      <h3 class="section-title" data-i18n="extremes-title">过去30年今日天气</h3>
+      <p id="extremes-window" class="muted small">计算中…</p>
+      <div class="grid extremes-grid">
+        <article id="ext-raindays" class="extreme-card extreme-raindays">
+          <div class="ext-header"><span class="ext-emoji">🌧️</span><span class="ext-label" data-i18n="ext-label-raindays">降水天数</span></div>
+          <div class="ext-body">
+            <div class="ext-value">--</div>
+            <div class="ext-year">--</div>
+            <div class="ext-date muted">--</div>
+          </div>
+        </article>
+        <article id="ext-precip" class="extreme-card extreme-precip">
+          <div class="ext-header"><span class="ext-emoji">🌧️</span><span class="ext-label" data-i18n="ext-label-precip">最大降水</span></div>
+          <div class="ext-body">
+            <div class="ext-value">--</div>
+            <div class="ext-year">--</div>
+            <div class="ext-date muted">--</div>
+          </div>
+        </article>
+        <article id="ext-hot" class="extreme-card extreme-hot">
+          <div class="ext-header"><span class="ext-emoji">🔥</span><span class="ext-label" data-i18n="ext-label-hot">最高温度</span></div>
+          <div class="ext-body">
+            <div class="ext-value">--</div>
+            <div class="ext-year">--</div>
+            <div class="ext-date muted">--</div>
+          </div>
+        </article>
+        <article id="ext-cold" class="extreme-card extreme-cold">
+          <div class="ext-header"><span class="ext-emoji">❄️</span><span class="ext-label" data-i18n="ext-label-cold">最低温度</span></div>
+          <div class="ext-body">
+            <div class="ext-value">--</div>
+            <div class="ext-year">--</div>
+            <div class="ext-date muted">--</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer muted small">
+      <p class="footer-meta">
+        &copy; 2026 <a href="https://github.com/secnotes" target="_blank" rel="noopener">Security Notes</a>
+        <span>|</span>
+        <a href="https://github.com/secnotes/weather" target="_blank" rel="noopener">
+          <svg class="github-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+          </svg>
+          <span data-i18n="footer-star">Star on GitHub</span>
+        </a>
+      </p>
+      <p><span data-i18n="footer-src">数据来源：</span><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a><span data-i18n="footer-note">（免费、开源）。卡片显示所选城市今天这个日期在过去 30 年的历史极值；首次加载约需 6 秒，之后缓存 30 天。</span></p>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>
