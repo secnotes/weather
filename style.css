@@ -209,20 +209,6 @@ a { color: var(--accent); }
 /* detail */
 .detail { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; }
 .detail-head { display: flex; align-items: center; gap: 10px; }
-.detail-icon {
-  font-size: 18px;
-  width: 34px; height: 34px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 10px;
-  flex-shrink: 0;
-  background: rgba(79, 195, 247, .14);
-}
-.detail-humidity .detail-icon,
-.detail-precip .detail-icon { background: rgba(56, 189, 248, .16); }
-.detail-aqi .detail-icon { background: rgba(148, 163, 184, .18); }
-.detail-wind .detail-icon { background: rgba(45, 212, 191, .16); }
-.detail-pressure .detail-icon { background: rgba(167, 139, 250, .16); }
-.detail-uv .detail-icon { background: rgba(251, 191, 36, .18); }
 .dlabel { font-size: 13px; color: var(--muted); }
 .dvalue-row { display: flex; align-items: baseline; gap: 8px; min-height: 26px; }
 .dvalue { font-size: 20px; font-weight: 600; }
@@ -276,7 +262,6 @@ a { color: var(--accent); }
 
 /* 日出/日落合并卡 + 太阳轨迹弧 */
 .detail-sun { grid-column: span 2; }
-.detail-sun .detail-icon { background: rgba(251, 191, 36, .18); }
 .sun-row {
   display: flex;
   align-items: center;
@@ -294,6 +279,166 @@ a { color: var(--accent); }
 .sun-arc { margin-top: 2px; }
 .sun-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .sun-mark { font-size: 13px; }
+
+/* ---------- 模态（气压详情等） ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 18, 25, .55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+.modal-box {
+  position: relative;
+  width: min(520px, 92vw);   /* 桌面更宽，手机自动收窄 */
+  max-height: 84vh;
+  overflow-y: auto;
+  background: rgba(31, 45, 56, .92);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .45);
+}
+.modal-close {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 28px; height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .10);
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.modal-close:hover { background: rgba(255, 255, 255, .22); color: var(--text); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-right: 28px; }
+
+.pm-now { display: flex; align-items: baseline; gap: 10px; }
+.pm-cur { font-size: 34px; font-weight: 700; }
+.pm-cur small { font-size: 14px; font-weight: 400; color: var(--muted); }
+.pm-trend { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
+
+.pm-sub {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  margin: 16px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, .10);
+}
+.pm-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.pm-stats div {
+  background: rgba(255, 255, 255, .06);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+}
+.pm-stats i { display: block; font-style: normal; font-size: 11px; color: var(--muted); }
+.pm-stats b { font-size: 14px; font-weight: 600; }
+
+.pm-info {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  margin: 6px 0 2px;
+  color: #e0d2ff;
+  min-height: 18px;
+}
+
+/* 月相模态：大图 + 相位日程 */
+.moon-big { display: flex; justify-content: center; margin: 14px 0 4px; }
+.moon-big .moon-svg { width: 120px; }
+.moon-next { display: flex; flex-direction: column; gap: 6px; }
+.moon-next-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, .06);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.moon-next-row b { font-weight: 600; }
+.moon-next-lunar { font-style: normal; font-size: 11px; font-weight: 400; color: var(--muted); margin-left: 4px; }
+
+/* UV 模态：7 天峰值柱图 */
+.uv-week { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; }
+.uv-bar { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+.uv-bar i { font-style: normal; font-size: 10px; color: var(--muted); white-space: nowrap; }
+.uv-col { width: 100%; max-width: 26px; border-radius: 4px 4px 0 0; min-height: 2px; }
+.uv-bar b { font-size: 11px; font-weight: 600; }
+
+/* 日出日落模态：24h 高度曲线 + 曙暮光色带 */
+.sun-alt-svg .tw-day   { fill: rgba(251, 191, 36, .13); }
+.sun-alt-svg .tw-civil { fill: rgba(251, 146, 60, .10); }
+.sun-alt-svg .tw-naut  { fill: rgba(99, 102, 241, .12); }
+.sun-alt-svg .tw-astro { fill: rgba(67, 56, 202, .14); }
+.sun-alt-svg .tw-night { fill: rgba(15, 23, 42, .30); }
+.sun-seg { display: flex; flex-direction: column; gap: 6px; }
+.sun-seg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, .06);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.sun-seg-row b { font-weight: 600; }
+
+.pm-note {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: rgba(167, 139, 250, .10);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+/* AQI 模态：六污染物浓度格 + 分档条 */
+.aq-concs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.aq-concs div {
+  background: rgba(255, 255, 255, .06);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+}
+.aq-concs i { display: block; font-style: normal; font-size: 11px; color: var(--muted); }
+.aq-concs b { font-size: 15px; font-weight: 600; }
+.aq-concs u { display: block; text-decoration: none; font-size: 10px; color: var(--muted); }
+.aq-concs .aq-over b { color: #fb7185; }   /* 超日均限值标红 */
+
+.aq-rows { display: flex; flex-direction: column; gap: 8px; }
+.aq-row { display: grid; grid-template-columns: 64px 1fr 30px 88px; align-items: center; gap: 8px; }
+.aq-name { font-size: 12px; color: var(--muted); }
+.aq-track { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .10); overflow: hidden; }
+.aq-fill { height: 100%; border-radius: 4px; }
+.aq-fill.lv-low { background: #4ade80; }
+.aq-fill.lv-mid { background: #facc15; }
+.aq-fill.lv-high { background: #fb923c; }
+.aq-fill.lv-severe { background: #fb7185; }
+.aq-fill.lv-extreme { background: #c084fc; }
+.aq-iaqi { font-size: 12px; font-weight: 600; text-align: right; }
+.aq-grade { font-size: 11px; text-align: right; white-space: nowrap; }
+.aq-grade.lv-low { color: #4ade80; }
+.aq-grade.lv-mid { color: #facc15; }
+.aq-grade.lv-high { color: #fb923c; }
+.aq-grade.lv-severe { color: #fb7185; }
+.aq-grade.lv-extreme { color: #c084fc; }
+
+/* 气压 24h 趋势线 */
+.ptrend { margin-top: 2px; }
+.ptrend-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ptrend-svg.ptrend-detail { margin: 12px auto 4px; max-width: 380px; }  /* 宽模态下限制放大，保持文字比例 */
+.ptrend-svg .pline { filter: drop-shadow(0 0 4px rgba(167, 139, 250, .45)); }
+.ptrend-lab { font-size: 12px; fill: rgba(245, 247, 250, .45); }
+.ptrend-val { font-size: 12px; font-weight: 600; fill: rgba(224, 210, 255, .9); }
 
 /* 月相卡 */
 .moon-viz { display: flex; justify-content: center; margin-top: 2px; }
@@ -433,6 +578,8 @@ a { color: var(--accent); }
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
   .detail-grid { grid-template-columns: repeat(2, 1fr); }
+  /* 手机上卡片变窄(svg缩放~0.83)，字号单位同步放大，保证渲染后仍≈12px */
+  .ptrend-lab, .ptrend-val { font-size: 14.5px; }
   .extremes-grid { grid-template-columns: repeat(2, 1fr); }
   .forecast-row { grid-template-columns: repeat(4, 1fr); }
   #current-temp { font-size: 48px; }

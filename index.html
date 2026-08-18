@@ -46,37 +46,37 @@
     <!-- 详情卡网格 -->
     <section class="grid detail-grid">
       <div class="card detail detail-humidity">
-        <div class="detail-head"><div class="detail-icon">💧</div><span class="dlabel" data-i18n="label-humidity">湿度</span></div>
+        <div class="detail-head"><span class="dlabel" data-i18n="label-humidity">湿度</span></div>
         <div class="dvalue-row"><span id="d-humidity" class="dvalue">--</span><span id="d-humidity-level" class="dlevel"></span></div>
         <div class="gauge" id="d-humidity-gauge" aria-label="湿度仪表"></div>
       </div>
       <div class="card detail detail-wind">
-        <div class="detail-head"><div class="detail-icon">💨</div><span class="dlabel" data-i18n="label-wind">风力</span></div>
+        <div class="detail-head"><span class="dlabel" data-i18n="label-wind">风力</span></div>
         <div class="dvalue-row"><span id="d-wind" class="dvalue">--</span><span id="d-wind-sub" class="dlevel"></span></div>
         <div class="drose" id="d-winddir-rose" aria-label="风向罗盘"></div>
       </div>
-      <div class="card detail detail-pressure">
-        <div class="detail-head"><div class="detail-icon">📊</div><span class="dlabel" data-i18n="label-pressure">气压</span></div>
+      <div class="card detail detail-pressure" id="d-pressure-card">
+        <div class="detail-head"><span class="dlabel" data-i18n="label-pressure">气压</span></div>
         <div class="dvalue-row"><span id="d-pressure" class="dvalue">--</span><span id="d-pressure-level" class="dlevel"></span></div>
-        <div class="dbar" id="d-pressure-bar"><div class="dbar-marker"></div></div>
+        <div class="ptrend" id="d-pressure-trend" aria-label="过去24小时气压趋势"></div>
       </div>
-      <div class="card detail detail-uv">
-        <div class="detail-head"><div class="detail-icon">☀️</div><span class="dlabel" data-i18n="label-uv">紫外线</span></div>
+      <div class="card detail detail-uv" id="d-uv-card">
+        <div class="detail-head"><span class="dlabel" data-i18n="label-uv">紫外线</span></div>
         <div class="dvalue-row"><span id="d-uv" class="dvalue">--</span><span id="d-uv-level" class="dlevel"></span></div>
         <div class="dbar" id="d-uv-bar"><div class="dbar-marker"></div></div>
       </div>
-      <div class="card detail detail-aqi">
-        <div class="detail-head"><div class="detail-icon">🌫️</div><span class="dlabel" data-i18n="label-aqi">空气质量（中国）</span></div>
+      <div class="card detail detail-aqi" id="d-aqi-card">
+        <div class="detail-head"><span class="dlabel" data-i18n="label-aqi">空气质量（中国）</span></div>
         <div class="dvalue-row"><span id="d-aqi" class="dvalue">--</span><span id="d-aqi-level" class="dlevel"></span></div>
         <div class="dbar" id="d-aqi-bar"><div class="dbar-marker"></div></div>
       </div>
-      <div class="card detail detail-moon">
-        <div class="detail-head"><div class="detail-icon">🌙</div><span class="dlabel" data-i18n="label-moon">月相</span></div>
+      <div class="card detail detail-moon" id="d-moon-card">
+        <div class="detail-head"><span class="dlabel" data-i18n="label-moon">月相</span></div>
         <div class="dvalue-row"><span id="d-moon" class="dvalue">--</span><span id="d-moon-level" class="dlevel"></span></div>
         <div class="moon-viz" id="d-moon-viz" aria-label="月相图"></div>
       </div>
       <div class="card detail detail-sun" id="d-sun-card">
-        <div class="detail-head"><div class="detail-icon">☀️</div><span class="dlabel" data-i18n="label-sun">日出 / 日落</span></div>
+        <div class="detail-head"><span class="dlabel" data-i18n="label-sun">日出 / 日落</span></div>
         <div class="sun-row">
           <div class="sun-end">
             <span class="sun-emoji">🌅</span>
