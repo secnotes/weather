@@ -435,7 +435,7 @@ a { color: var(--accent); }
 /* 气压 24h 趋势线 */
 .ptrend { margin-top: 2px; }
 .ptrend-svg { width: 100%; height: auto; display: block; overflow: visible; }
-.ptrend-svg.ptrend-detail { margin: 12px auto 4px; max-width: 380px; }  /* 宽模态下限制放大，保持文字比例 */
+.ptrend-svg.ptrend-detail { margin: 12px auto 4px; width: 300px; max-width: 100%; }  /* 固定 300px = viewBox 宽，SVG 文字恒定 12px，不随窗口漂移 */
 .ptrend-svg .pline { filter: drop-shadow(0 0 4px rgba(167, 139, 250, .45)); }
 .ptrend-lab { font-size: 12px; fill: rgba(245, 247, 250, .45); }
 .ptrend-val { font-size: 12px; font-weight: 600; fill: rgba(224, 210, 255, .9); }
@@ -578,8 +578,10 @@ a { color: var(--accent); }
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
   .detail-grid { grid-template-columns: repeat(2, 1fr); }
-  /* 手机上卡片变窄(svg缩放~0.83)，字号单位同步放大，保证渲染后仍≈12px */
-  .ptrend-lab, .ptrend-val { font-size: 14.5px; }
+  /* 手机上卡片迷你图变窄(缩放~0.83)，字号单位同步放大，保证渲染后仍≈12px；
+     模态详细图固定 300px(1:1) 不需要补偿，排除之 */
+  .ptrend-svg:not(.ptrend-detail) .ptrend-lab,
+  .ptrend-svg:not(.ptrend-detail) .ptrend-val { font-size: 14.5px; }
   .extremes-grid { grid-template-columns: repeat(2, 1fr); }
   .forecast-row { grid-template-columns: repeat(4, 1fr); }
   #current-temp { font-size: 48px; }
