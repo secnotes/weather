@@ -7,6 +7,7 @@ A purely front-end static weather website (bilingual Chinese/English), deployabl
 ## Features
 
 - **Chinese/English toggle**: one click in the top bar, remembered locally; city names, weather descriptions, level wording, and the air-quality standard all follow the language.
+- **Auto location**: on page load, the site requests the user's location and shows local weather (with browser permission); on denial or failure it falls back to Beijing with a toast. The 📍 button in the top bar re-locates at any time. The last viewed location is remembered and loaded directly on the next visit. City names are reverse-geocoded via BigDataCloud's free client-side API.
 - **City search**: bilingual autocomplete (Open-Meteo Geocoding), defaults to Beijing.
 - **Common weather cards**:
   - Current weather hero card (temperature, weather icon, feels-like, description)
@@ -54,7 +55,7 @@ python3 -m http.server 8123
 npx serve .
 ```
 
-You can also double-click `index.html` to open it via `file://` (the APIs allow CORS, so it works fine).
+You can also double-click `index.html` to open it via `file://` (the APIs allow CORS, so it works fine). Note: browser Geolocation requires a secure context (HTTPS or localhost); most browsers disable it on `file://`, in which case the site falls back to Beijing.
 
 ## Notes
 

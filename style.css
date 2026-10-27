@@ -142,6 +142,26 @@ a { color: var(--accent); }
 }
 .lang-switch button.active { background: rgba(79, 195, 247, .25); color: var(--text); font-weight: 600; }
 
+/* 顶栏定位按钮（风格与语言切换一致） */
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
+.loc-btn {
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .15s, color .15s;
+}
+.loc-btn svg { width: 15px; height: 15px; display: block; }
+.loc-btn:hover { background: rgba(79, 195, 247, .25); color: var(--text); }
+.loc-btn.loading { opacity: .55; pointer-events: none; }
+.loc-btn.loading svg { animation: loc-spin 1.6s linear infinite; }
+@keyframes loc-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* 列表模式（仿墨迹 15 天预报行样式） */
 .forecast-list { display: flex; flex-direction: column; }
 .frow {

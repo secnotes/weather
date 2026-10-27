@@ -116,6 +116,11 @@ const I18N = {
     'history-err': '历史数据加载失败：',
     'net-err': '网络错误，请检查连接',
     'ext-loading': '正在拉取过去 30 年今日历史数据，约需 10-15 秒，之后缓存 30 天…',
+    'loc-btn': '定位',
+    'loc-mylocation': '当前位置',
+    'loc-fail': '定位失败，已显示北京天气',
+    'loc-denied': '定位被拒绝，已显示北京天气',
+    'loc-unsupported': '当前环境不支持定位',
     'footer-src': '数据来源：',
     'footer-star': 'Star on GitHub',
     'footer-note': '（免费、开源）。卡片显示所选城市今天这个日期在过去 30 年的历史极值；首次加载约需 6 秒，之后缓存 30 天。',
@@ -214,6 +219,11 @@ const I18N = {
     'history-err': 'Failed to load history: ',
     'net-err': 'Network error, check connection',
     'ext-loading': 'Fetching 30-year history for this date, takes ~10-15s, then cached 30 days…',
+    'loc-btn': 'Locate',
+    'loc-mylocation': 'My Location',
+    'loc-fail': 'Location failed; showing Beijing',
+    'loc-denied': 'Location denied; showing Beijing',
+    'loc-unsupported': 'Geolocation not available in this environment',
     'footer-src': 'Data source: ',
     'footer-star': 'Star on GitHub',
     'footer-note': ' (free, open source). Cards show historical extremes for this date over the past 30 years; first load ~6s, then cached 30 days.',
@@ -230,6 +240,8 @@ function applyLang() {
   document.querySelectorAll('#lang-switch button').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === LANG);
   });
+  const locBtn = document.getElementById('loc-btn');
+  if (locBtn) { locBtn.title = t('loc-btn'); locBtn.setAttribute('aria-label', t('loc-btn')); }
 }
 
 /* ---------- WMO 天气代码 -> 中文标签 + emoji ---------- */
@@ -1883,10 +1895,83 @@ function showExtremesError(msg) {
   }
 }
 
+/* ---------- 定位（浏览器 Geolocation + BigDataCloud 反查地名） ---------- */
+const GEO_KEY = CACHE_PREFIX + 'savedPos';          // 上次查看的位置：{ lat, lon, zhName, enName }
+const GEO_POS_TTL = 365 * 24 * 60 * 60 * 1000;     // 一年未更新则过期，实际由每次选城覆写
+const RGEO_URL = 'https://api.bigdatacloud.net/data/reverse-geocode-client';
+
+/* 反查地名：BigDataCloud 免费客户端接口（免 key、开放 CORS），中英并行各取一份 */
+async function reverseGeocodeName(lat, lon, lang) {
+  const url = `${RGEO_URL}?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`;
+  const d = await fetch(url).then(r => r.json());
+  return d.city || d.locality || d.principalSubdivision || null;
+}
+async function reverseGeocode(lat, lon) {
+  const fallback = t('loc-mylocation');
+  const names = await Promise.all(['zh', 'en'].map(l => reverseGeocodeName(lat, lon, l).catch(() => null)));
+  return { zhName: names[0] || fallback, enName: names[1] || fallback };
+}
+
+function locBtnSetLoading(on) {
+  const btn = document.getElementById('loc-btn');
+  if (btn) btn.classList.toggle('loading', on);
+}
+
+/* 请求浏览器定位：成功后反查地名并加载，返回 'ok' | 'denied' | 'fail' | 'unsupported'。
+   isStartup 时不弹 toast（由调用方统一提示后回退北京），非启动场景直接提示 */
+async function locateMe({ isStartup = false } = {}) {
+  const finish = (result, msg) => {
+    locBtnSetLoading(false);
+    if (msg && !isStartup) showToast(msg);
+    return result;
+  };
+  if (!('geolocation' in navigator)) return finish('unsupported', t('loc-unsupported'));
+  locBtnSetLoading(true);
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        // 与各数据缓存 key 一致的 ~1km 精度
+        const lat = roundCoord(pos.coords.latitude);
+        const lon = roundCoord(pos.coords.longitude);
+        try {
+          const { zhName, enName } = await reverseGeocode(lat, lon);
+          // selectCity 内部自带错误处理（toast），不 await：定位成功、开始加载即结束按钮动画
+          selectCity(lat, lon, zhName, enName);
+          resolve(finish('ok'));
+        } catch (e) {
+          showToast(t('weather-err') + e.message);
+          resolve(finish('fail'));
+        }
+      },
+      err => {
+        const denied = err.code === err.PERMISSION_DENIED;
+        resolve(finish(denied ? 'denied' : 'fail', denied ? t('loc-denied') : t('loc-fail')));
+      },
+      { timeout: 8000, maximumAge: 600000 },   // 10 分钟内的缓存位置可直接复用
+    );
+  });
+}
+
+/* 启动：优先用记忆位置；首次访问先定位（最多 8 秒），拒绝/失败 Toast 后回退北京 */
+async function loadInitialCity() {
+  const saved = cacheGet(GEO_KEY, GEO_POS_TTL);
+  if (saved && saved.lat != null && saved.lon != null) {
+    selectCity(saved.lat, saved.lon, saved.zhName, saved.enName);
+    return;
+  }
+  showExtremesLoading();
+  const result = await locateMe({ isStartup: true });
+  if (result !== 'ok') {
+    showToast(result === 'denied' ? t('loc-denied') : t('loc-fail'));
+    selectCity(DEFAULT_CITY.lat, DEFAULT_CITY.lon, DEFAULT_CITY.zhName, DEFAULT_CITY.enName);
+  }
+}
+
 /* ---------- 主流程 ---------- */
 /* 最近一次加载的上下文：语言切换时用缓存数据整体重渲染，不重新请求 */
+const DEFAULT_CITY = { lat: 39.9075, lon: 116.39723, zhName: '北京', enName: 'Beijing' };
 let lastCtx = {
-  lat: 39.9075, lon: 116.39723, zhName: '北京', enName: 'Beijing',
+  lat: DEFAULT_CITY.lat, lon: DEFAULT_CITY.lon, zhName: DEFAULT_CITY.zhName, enName: DEFAULT_CITY.enName,
   weather: null, aqi: null, extremes: null,
 };
 function cityLabel() { return LANG === 'zh' ? lastCtx.zhName : lastCtx.enName; }
@@ -1897,6 +1982,8 @@ async function selectCity(lat, lon, zhName, enName) {
     zhName: zhName || lastCtx.zhName, enName: enName || zhName || lastCtx.enName,
     weather: null, aqi: null, extremes: null,
   };
+  // 记住本次查看的位置（无论来自定位还是搜索），下次打开直接加载
+  cacheSet(GEO_KEY, { lat, lon, zhName: lastCtx.zhName, enName: lastCtx.enName });
   showExtremesLoading();
 
   // 天气 / 历史 / 空气质量并行拉取（历史是慢的那个，约 10 秒）
@@ -2010,6 +2097,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => { t.hidden = true; }, 3500);
 }
 
-/* ---------- 启动：默认北京 ---------- */
+/* ---------- 启动：优先记忆位置，首次访问自动定位，失败回退北京 ---------- */
 applyLang();
-selectCity(lastCtx.lat, lastCtx.lon, lastCtx.zhName, lastCtx.enName);
+document.getElementById('loc-btn').addEventListener('click', () => locateMe());
+loadInitialCity();

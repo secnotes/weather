@@ -20,9 +20,18 @@
       <input id="search" type="text" autocomplete="off" data-i18n-ph="search-ph" placeholder="搜索城市，如 北京 / Shanghai / Tokyo" />
       <ul id="suggestions" class="suggestions" hidden></ul>
     </div>
-    <div class="lang-switch" id="lang-switch">
-      <button type="button" data-lang="zh">中</button>
-      <button type="button" data-lang="en">EN</button>
+    <div class="topbar-actions">
+      <button id="loc-btn" class="loc-btn" type="button" title="定位" aria-label="定位">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="7"/>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+          <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2"/>
+        </svg>
+      </button>
+      <div class="lang-switch" id="lang-switch">
+        <button type="button" data-lang="zh">中</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
     </div>
   </header>
 
